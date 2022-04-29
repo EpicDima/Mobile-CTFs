@@ -9,18 +9,21 @@
 Первоначально нужно открыть первое приложение и далее после некоторых манипуляций откроется второе приложение, которое передаёт секрет обратно первому приложению. Благодаря этому секрету следует получить флаг.
 
 ## Решение
+
 Для начала установим и откроем приложение GETSECRET в эмуляторе.
 На экране можно увидеть поле для ввода и кнопку, после ввода "123" и нажатия кнопки видим сообщение, которое говорит о том, что введённый код неверный.
 
 <details>
   <summary>Скриншот</summary>
-  <img src="./CTF1/1.png">
+  
+  ![](/CTF1/1.png)
 </details>
 
 Установим и откроем второе приложение SENDSECRET. После запуска видим экран без каких-либо элементов, только надпись, желающая удачи. Также можно заметить появляющееся сообщение "Received Token: 0", по которому можно сделать вывод, что данное приложение должно действительно запускаться с Интентом, содержащим числовой токен, как и написано в задаче.
 <details>
   <summary>Скриншот</summary>
-  <img src="./CTF1/2.png">
+
+  ![](/CTF1/2.png)
 </details>
 
 В обоих приложениях есть меню (кнопка из трёх точек в правом верхнем углу экрана), однако оно несёт какой-либо информации для решения задачи, позже в этом убедимся.
@@ -56,12 +59,14 @@
 Также можно увидеть эти 3 класса в дереве файлов.
 <details>
   <summary>Скриншот</summary>
-  <img src="./CTF1/4.png">
+  
+  ![](/CTF1/3.png)
 </details>
 
 Стартовая Активити - LoginActivity, в которую нужно ввести правильный код, для дальнейшей работы, поэтому рассмотрим её детальнее.
 
 В методе onCreate обнаруживаем следующие две строки.
+
 ```java
 this.f1439 = (Button) findViewById(R.id.button);
 this.f1439.setOnClickListener(new View$OnClickListenerC0406(this));
@@ -70,6 +75,7 @@ this.f1439.setOnClickListener(new View$OnClickListenerC0406(this));
 Это просто нахождение кнопки по id и подключение к ней обработчика нажатия, который нам интересен. Поэтому переходим в класс обработчика.
 
 Класс обработчика это простая реализация интерфейса View.OnClickListener, чего и следовало ожидать. Сразу находим метод onClick, который обязательно должен быть реализован.
+
 ```java
 @Override // android.view.View.OnClickListener
 public void onClick(View view) {
@@ -93,12 +99,14 @@ public void onClick(View view) {
 Для того, чтобы попасть на следующий экран, нужно получить код, следовательно нужно его достать из метода m1893. Можно использовать Frida, однако у меня возникли трудности с нахождением методов, так как они называются очень странными символами. Благо, можно пойти другим способом.
 
 Как можно увидеть, для запуска метода используется некое число из массива f1385.
+
 ```java
 byte b = f1385[4];
 if (obj.equals(m1893(b, b, b).intern())) {
 ```
 
 Массив выглядит следующим образом:
+
 ```java
 private static final byte[] f1385 = {106, 115, 110, 51, 0, 2, -2};
 ```
@@ -106,46 +114,48 @@ private static final byte[] f1385 = {106, 115, 110, 51, 0, 2, -2};
 <details>
   <summary>Метод m1893</summary>
   
-  ```java
+```java
 private static String m1893(int i, int i2, int i3) {
-        int i4 = 4 - (i * 3);
-        int i5 = 4 - (i2 * 3);
-        int i6 = 0;
-        int i7 = (i3 * 4) + 49;
-        byte[] bArr = f1385;
-        byte[] bArr2 = new byte[i5];
-        int i8 = i5 - 1;
-        if (bArr == null) {
-            i4++;
-            i7 = i7 + (-i8) + 2;
-        }
-        while (true) {
-            bArr2[i6] = (byte) i7;
-            if (i6 == i8) {
-                return new String(bArr2, 0);
-            }
-            int i9 = i7;
-            byte b = bArr[i4];
-            i6++;
-            i4++;
-            i7 = i9 + (-b) + 2;
-        }
+    int i4 = 4 - (i * 3);
+    int i5 = 4 - (i2 * 3);
+    int i6 = 0;
+    int i7 = (i3 * 4) + 49;
+    byte[] bArr = f1385;
+    byte[] bArr2 = new byte[i5];
+    int i8 = i5 - 1;
+    if (bArr == null) {
+        i4++;
+        i7 = i7 + (-i8) + 2;
     }
+    while (true) {
+        bArr2[i6] = (byte) i7;
+        if (i6 == i8) {
+            return new String(bArr2, 0);
+        }
+        int i9 = i7;
+        byte b = bArr[i4];
+        i6++;
+        i4++;
+        i7 = i9 + (-b) + 2;
+    }
+}
+```
 
-  ```
 </details>
 
 Так как поле с массивом приватное, значит к нему не должны иметь доступ извне. Это можно подтвердить командой Find Usage. Проверяем это, чтобы определить, мог ли кто-либо поменять элементы массива, чтобы реверсить было сложнее.
 <details>
   <summary>Скриншоты</summary>
-  <img src="./CTF1/11.png">
-  <img src="./CTF1/12.png">
+
+  ![](/CTF1/4.png)
+  ![](/CTF1/5.png)
 </details>
 
 Тоже самое верно и для метода m1893.
 <details>
   <summary>Скриншот</summary>
-  <img src="./CTF1/13.png">
+  
+  ![](/CTF1/6.png)
 </details>
 
 Массив используется также и внутри метода m1893. Но не изменяется, что важно, так как в ином случае может потребоваться повторный вызов метода для получения необходимого значения.
@@ -155,8 +165,8 @@ private static String m1893(int i, int i2, int i3) {
 <details>
   <summary>Код класса LoginActivity</summary>
   
-  ```java
-  public class LoginActivity {
+```java
+public class LoginActivity {
 
     public static String call() {
         byte b = f1385[4];
@@ -192,9 +202,11 @@ private static String m1893(int i, int i2, int i3) {
     }
 }
 ```
+
 </details>
 
 Вызов метода call в MainActivity будет находится в onCreate и выглядеть так:
+
 ```java
 Log.d("MainActivity", "LoginActivity secret: " + LoginActivity.call());
 ```
@@ -206,17 +218,20 @@ Log.d("MainActivity", "LoginActivity secret: " + LoginActivity.call());
 Ожидаемо открывается новая Активити и мы получаем сообщение об успешном сравнении, которое видели ранее в коде.
 <details>
   <summary>Скриншот</summary>
-  <img src="./CTF1/14.png">
+  
+  ![1](/CTF1/7.png)
 </details>
 
 На этом экране две кнопки. Нижняя кнопка HINT ведёт на сайт, который сейчас отдаёт статус 404. Верхняя кнопка "GET SECRET" открывает приложение SENDSECRET и передаёт туда код, который меняется при каждом нажатии.
 <details>
   <summary>Скриншот</summary>
-  <img src="./CTF1/15.png">
+  
+  ![](/CTF1/8.png)
 </details>
 
 Открытая Активити после ввода кода называется AskSecret. Нужно найти, почему именно код отправляемый в другое приложение разный.
 Таким же образом, как и раньше, находим в onCreate findViewById, далее обработчик. Здесь две кнопки, поэтому нужно посмотреть обработчик каждой кнопки.
+
 ```java
 public void onCreate(Bundle bundle) {
     super.onCreate(bundle);
@@ -229,6 +244,7 @@ public void onCreate(Bundle bundle) {
 ```
 
 Обработчик кнопки с id button2:
+
 ```java
 @Override // android.view.View.OnClickListener
 public void onClick(View view) {
@@ -241,6 +257,7 @@ public void onClick(View view) {
 ```
 
 Обработчик кнопки с id button3:
+
 ```java
 @Override // android.view.View.OnClickListener
 public void onClick(View view) {
@@ -248,7 +265,7 @@ public void onClick(View view) {
 }
 ```
 
-Обработчик кнопки button3 просто открывает ссылку. 
+Обработчик кнопки button3 просто открывает ссылку.
 А вот обработчик кнопки button2 более интересный.
 В первой строке генерируется случайное значение, всего вариантов 19.
 Во сторой создаётся Intent. Далее указывается компонент - открываемая Активити ValidateAccess приложения SENDSECRET, добавляется случайное число по ключу token, после чего отправляется данный Интент для запуска Активити.
@@ -256,6 +273,7 @@ public void onClick(View view) {
 Можно сделать вывод, что необходимо много раз нажать на кнопку, чтобы угадать случайное число. Сделаем это чуть позже, а пока посмотрим второе приложение в jadx-gui.
 
 Сразу посмотрим Android Manifest. Можно увидеть, что там всего 2 Активити.
+
 ```xml
 <application android:theme="@style/AppTheme" android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:allowBackup="false">
     <activity android:label="@string/app_name" android:name="opensecurity.sendsecret.ValidateAccess" android:exported="true">
@@ -271,6 +289,7 @@ public void onClick(View view) {
 Видим Активити с именем ValidateAccess, которая как раз и открывается из первого приложения, а также имеет intent-filter, показывающий, что эта же Активити открывается по нажатию на значок в списке приложений.
 
 Посмотрим код класса ValidateAccess. Сразу видим в методе onCreate случайную генерацию числа, получение токена по соответствующем ключу и сравнение обоих, при удачно сравнении создаётся Intent для запуска ActivityC0371, в который кладётся результат вызова метода m1948 по ключу VIEW_TOKEN.
+
 ```java
 int i3 = f1429[12] + 1;
 m1948(i3, i3, i3).intern();
@@ -288,6 +307,7 @@ if (intExtra == nextInt) {
 В общем код похож на то, что мы уже видели, за исключением угадывания числа. Есть массив f1429, есть метод m1948, результат которого используется для запуска Активити.
 
 Массив:
+
 ```java
 private static final byte[] f1429 = {28, -117, 87, 105, 9, -3, 17, 13, -6, 6, 26, 5, -1, 19, 13, -67, 67, 13, -53, 9, 9, 9, 9, 9, 9, -14, 39, -21, 9, 9, 65};
 ```
@@ -295,7 +315,7 @@ private static final byte[] f1429 = {28, -117, 87, 105, 9, -3, 17, 13, -6, 6, 26
 <details>
   <summary>Метод m1948</summary>
   
-  ```java
+```java
 private static String m1948(int i, int i2, int i3) {
     int i4 = 111 - (i2 * 2);
     int i5 = (i * 2) + 28;
@@ -318,7 +338,8 @@ private static String m1948(int i, int i2, int i3) {
         i6++;
     }
 }
-  ```
+```
+
 </details>
 
 В этом случае не требуется подбирать значение, которое выдаёт метод, так как нужно просто угадать число. Поэтому посмотрим открываемую Активити - ActivityC0371.
@@ -344,6 +365,7 @@ public void onCreate(Bundle bundle) {
 ```
 
 Перейдём в Активити GetFlag в jadx-gui и посмотрим, что происходит со значением TOPSECRET. Можно увидеть, что со значением ничего не происходит, но говорящее название заставляет думать, что значение пригодится.
+
 ```java
 public void onCreate(Bundle bundle) {
     super.onCreate(bundle);
@@ -362,7 +384,7 @@ public void onCreate(Bundle bundle) {
 <details>
   <summary>Код класса ActivityC0371</summary>
   
-  ```java
+```java
 public class ActivityC0371 {
 
     public static String call() {
@@ -397,10 +419,12 @@ public class ActivityC0371 {
         }
     }
 }
-  ```
+```
+
 </details>
 
 Вызов метода call в MainActivity будет находится в onCreate и выглядеть так:
+
 ```java
 Log.d("MainActivity", "ActivityC0371 secret: " + ActivityC0371.call());
 ```
@@ -414,23 +438,25 @@ Log.d("MainActivity", "ActivityC0371 secret: " + ActivityC0371.call());
 <details>
   <summary>Код метода onClick</summary>
   
-  ```java
+```java
 @Override // android.view.View.OnClickListener
-    public void onClick(View view) {
-        try {
-            String str = this.f1375.m1948("q7jwHCFy7ADGQ+ol3V9k225uOOi21J6n8Q974DNoPi6uy+ushhg/L/MVVCdr8393RhbTYs/jP7eDvTEUJUucpg==", this.f1375.f1436.getText().toString());
-            this.f1375.f1437.setText(str);
-            Log.v("FLAG", str);
-        } catch (Exception e) {
-            Toast.makeText(this.f1375.getApplicationContext(), "Wrong Secret", 0).show();
-        }
+public void onClick(View view) {
+    try {
+        String str = this.f1375.m1948("q7jwHCFy7ADGQ+ol3V9k225uOOi21J6n8Q974DNoPi6uy+ushhg/L/MVVCdr8393RhbTYs/jP7eDvTEUJUucpg==", this.f1375.f1436.getText().toString());
+        this.f1375.f1437.setText(str);
+        Log.v("FLAG", str);
+    } catch (Exception e) {
+        Toast.makeText(this.f1375.getApplicationContext(), "Wrong Secret", 0).show();
     }
-  ```
+}
+```
+
 </details>
 
 Здесь можно увидеть вызов метода m1948, который находится в GetFlag, а также поле f1436, которое является объектом EditText, из которого достаётся введённый текст и отправляется в m1948 вторым аргументом.
 Рассмотрим m1948 получше.
 Код метода:
+
 ```java
 /* renamed from: ˊ  reason: contains not printable characters */
 public String m1948(String str, String str2) {
@@ -453,8 +479,8 @@ public String m1948(String str, String str2) {
 <details>
   <summary>Код класса GetFlag</summary>
   
-  ```java
-  import android.util.Base64;
+```java
+import android.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -475,10 +501,12 @@ public class GetFlag {
         }
     }
 }
-  ```
+```
+
 </details>
 
 Для вызова метода GetFlag.call используем полученный ранее секрет из ActivityC0371.
+
 ```java
 Log.d("MainActivity", "GetFlag secret: " + GetFlag.call("g4h-webcast-xb0z"));
 ```
