@@ -1,2 +1,3 @@
 # Mobile-CTFs
-My solutions to some mobile CTF challenges
+
+Мои решения мобильных CTF (Catch the Flag)
